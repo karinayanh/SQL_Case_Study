@@ -1,0 +1,75 @@
+alter session set nls_language = English;
+alter session set nls_territory = Canada;
+alter session set nls_date_format = 'dd-mon-yy';
+
+drop table shipment;
+drop table actual_flight;
+drop table scheduled_days;
+drop table flight_schedule;
+drop table flight;
+drop table customer;
+drop table airport;
+
+CREATE TABLE airport(
+ airport_code    VARCHAR2(3) PRIMARY KEY,
+ city            VARCHAR2(30) NOT NULL,
+ country         VARCHAR2(50) NOT NULL,
+ supports_vex    VARCHAR2(1)  DEFAULT 'N' NOT NULL,
+ timezone_offset NUMBER);
+ 
+CREATE TABLE customer (
+ customer_id  VARCHAR2(10)  PRIMARY KEY,
+ company      VARCHAR2(100) NOT NULL,
+ phone        VARCHAR2(12)  NULL,
+ address      VARCHAR2(100) NULL,
+ city         VARCHAR2(50)  NOT NULL,
+ country      VARCHAR2(50)  NOT NULL,
+ postal_code  VARCHAR2(10)  NOT NULL,
+ vex_discount VARCHAR2(1)   DEFAULT 'N' NOT NULL);
+ 
+CREATE TABLE flight(
+ flight_no         VARCHAR2(10) PRIMARY KEY,
+ departure_airport VARCHAR2(3) NOT NULL,
+ arrival_airport   VARCHAR2(3) NOT NULL,
+ FOREIGN KEY(departure_airport) REFERENCES airport,
+ FOREIGN KEY(arrival_airport)   REFERENCES airport);
+
+CREATE TABLE flight_schedule(
+ schedule_id    NUMBER         PRIMARY KEY,
+ flight_no      varchar2(10)   NOT NULL,
+ departure_time DATE           NULL,
+ arrival_time   DATE           NULL,
+ schedule_start DATE           NULL,
+ schedule_end   DATE           NULL,
+ notes          VARCHAR2(1000) NULL,
+ supports_vex   VARCHAR2(1)    NULL,
+ FOREIGN KEY(flight_no) REFERENCES flight); 
+
+CREATE TABLE scheduled_days (
+ schedule_id  NUMBER NOT NULL,
+ flight_day   VARCHAR2(10),
+ notes        VARCHAR2(1000),
+ PRIMARY KEY  (schedule_id, flight_day),
+ FOREIGN KEY  (schedule_id) REFERENCES flight_schedule);
+
+CREATE TABLE actual_flight (
+ flight_id        NUMBER       PRIMARY KEY,
+ flight_no        VARCHAR2(10) NOT NULL,
+ departure_date   DATE         NOT NULL,
+ arrival_date     DATE         NOT NULL,
+ vex_availability VARCHAR2(1)  NOT NULL,
+ CONSTRAINT actual_flight_u UNIQUE(flight_no, departure_date),
+ FOREIGN KEY(flight_no) REFERENCES flight);
+
+CREATE TABLE shipment (
+ shipment_code   VARCHAR2(30) PRIMARY KEY,
+ customer_id     VARCHAR2(10) NOT NULL,
+ flight_id       NUMBER       NOT NULL,
+ shipment_date   DATE         NOT NULL,
+ shipment_weight NUMBER       NOT NULL,
+ shipment_price  NUMBER       NULL,
+ shipment_type   VARCHAR2(10) NOT NULL,
+ FOREIGN KEY (customer_id) REFERENCES customer,
+ FOREIGN KEY (flight_id)   REFERENCES actual_flight);
+
+

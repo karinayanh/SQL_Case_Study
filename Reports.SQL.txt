@@ -1,0 +1,237 @@
+
+/* A. Airport and Date Schedule */ 
+
+SELECT CASE WHEN 'LHR' = dep.airport_code THEN arr.city ELSE dep.city END airport,
+       CASE WHEN arr.supports_vex = 'Y' AND dep.supports_vex ='Y' THEN 'Yes' 
+            WHEN sch.supports_vex = 'Y' THEN 'Yes'
+            ELSE 'No'
+       END vex,
+       flt.flight_no "Flight No.",
+       flt.departure_airport||'-'||flt.arrival_airport trip,
+       to_char(sch.departure_time + (dep.timezone_offset/24), 'HH24:MI') departs,
+       MAX(decode(fdy.flight_day, 'MONDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'MONDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020')END ) M,
+       MAX(decode(fdy.flight_day, 'TUESDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'TUESDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020')END) T,
+       MAX(decode(fdy.flight_day, 'WEDNESDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'WEDNESDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) W,
+       MAX(decode(fdy.flight_day, 'THURSDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'THURSDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) T,
+       MAX(decode(fdy.flight_day, 'FRIDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'FRIDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) F,
+       MAX(decode(fdy.flight_day, 'SATURDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'SATURDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) S,
+       MAX(decode(fdy.flight_day, 'SUNDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'SUNDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) S,
+       lpad(UNISTR('\2192') , trunc(sch.arrival_time + (arr.timezone_offset/24))- 
+       trunc(sch.departure_time + (dep.timezone_offset/24)), UNISTR('\2192')) ||
+       to_char(sch.arrival_time + (arr.timezone_offset/24), 'HH24:MI') arrives,
+       CASE WHEN sch.notes IS NOT NULL THEN UNISTR('\2020')||sch.notes END notes
+  FROM flight flt,
+       flight_schedule sch,
+       airport dep,
+       airport arr,
+       scheduled_days fdy
+ WHERE flt.flight_no = sch.flight_no AND
+       flt.departure_airport = dep.airport_code AND
+       flt.arrival_airport = arr.airport_code AND
+       sch.schedule_id = fdy.schedule_id AND
+       (flt.departure_airport = 'LHR' OR
+        flt.arrival_airport = 'LHR') AND
+       to_date('29-DEC-2014', 'DD-MON-YYYY') BETWEEN schedule_start AND
+       nvl(schedule_end, SYSDATE) 
+ GROUP BY CASE WHEN 'LHR' = dep.airport_code THEN arr.city ELSE dep.city END,
+       CASE WHEN arr.supports_vex = 'Y' AND dep.supports_vex ='Y' THEN 'Yes' 
+            WHEN sch.supports_vex = 'Y' THEN 'Yes'
+            ELSE 'No'
+       END,
+       flt.flight_no,
+       flt.departure_airport||'-'||flt.arrival_airport,
+       to_char(sch.departure_time + (dep.timezone_offset/24), 'HH24:MI'),
+       lpad(UNISTR('\2192'), trunc(sch.arrival_time + (arr.timezone_offset/24))- 
+       trunc(sch.departure_time + (dep.timezone_offset/24)), UNISTR('\2192')) ||
+       to_char(sch.arrival_time + (arr.timezone_offset/24), 'HH24:MI'),
+       CASE WHEN sch.notes IS NOT NULL THEN UNISTR('\2020')||sch.notes END
+ ORDER BY airport, trip, flt.flight_no DESC;
+ 
+/* B. Country and Date Schedule */
+
+SELECT CASE WHEN 'United States' = dep.country THEN arr.city ELSE dep.city END airport,
+       CASE WHEN arr.supports_vex = 'Y' AND dep.supports_vex ='Y' THEN 'Yes' 
+            WHEN sch.supports_vex = 'Y' THEN 'Yes'
+            ELSE 'No'
+       END vex,
+       flt.flight_no "Flight No.",
+       flt.departure_airport||'-'||flt.arrival_airport trip,
+       to_char(sch.departure_time + (dep.timezone_offset/24), 'HH24:MI') departs,
+       MAX(decode(fdy.flight_day, 'MONDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'MONDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020')END ) M,
+       MAX(decode(fdy.flight_day, 'TUESDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'TUESDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020')END) T,
+       MAX(decode(fdy.flight_day, 'WEDNESDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'WEDNESDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) W,
+       MAX(decode(fdy.flight_day, 'THURSDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'THURSDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) T,
+       MAX(decode(fdy.flight_day, 'FRIDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'FRIDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) F,
+       MAX(decode(fdy.flight_day, 'SATURDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'SATURDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) S,
+       MAX(decode(fdy.flight_day, 'SUNDAY', UNISTR('\25CF'))) ||
+       MAX(CASE WHEN fdy.flight_day = 'SUNDAY' AND fdy.notes IS NOT NULL THEN UNISTR('\2020') END) S,
+       to_char(sch.arrival_time + (arr.timezone_offset/24), 'HH24:MI') arrives,
+       CASE WHEN sch.notes IS NOT NULL THEN UNISTR('\2020')||sch.notes END notes
+  FROM flight flt,
+       flight_schedule sch,
+       airport dep,
+       airport arr,
+       scheduled_days fdy
+ WHERE flt.flight_no = sch.flight_no AND
+       flt.departure_airport = dep.airport_code AND
+       flt.arrival_airport = arr.airport_code AND
+       sch.schedule_id = fdy.schedule_id AND
+       (dep.country = 'United States' OR
+        arr.country = 'United States') AND
+       to_date('01-FEB-2015', 'DD-MON-YYYY') BETWEEN schedule_start AND
+       nvl(schedule_end, SYSDATE) 
+ GROUP BY CASE WHEN 'United States' = dep.country THEN arr.city ELSE dep.city END,
+       CASE WHEN arr.supports_vex = 'Y' AND dep.supports_vex ='Y' THEN 'Yes' 
+            WHEN sch.supports_vex = 'Y' THEN 'Yes'
+            ELSE 'No'
+       END,
+       flt.flight_no,
+       flt.departure_airport||'-'||flt.arrival_airport,
+       to_char(sch.departure_time + (dep.timezone_offset/24), 'HH24:MI'),
+       to_char(sch.arrival_time + (arr.timezone_offset/24), 'HH24:MI'),
+       CASE WHEN sch.notes IS NOT NULL THEN UNISTR('\2020')||sch.notes END;
+
+/* c. Daily Shipments Report */
+
+SELECT flt.flight_no,
+       flt.departure_airport ||'-'||flt.arrival_airport airports,
+       to_char(act.departure_date + (dep.timezone_offset/24), 'HH24:MI')departure_time,
+       to_char(act.arrival_date + (arr.timezone_offset/24), 'HH24:MI') arrival_time,
+       cus.company customer_name,
+       shp.shipment_weight,
+       shp.shipment_type
+  FROM shipment      shp,
+       actual_flight act,
+       flight        flt,
+       airport       dep,
+       airport       arr,
+       customer      cus
+ WHERE shp.flight_id = act.flight_id AND
+       act.flight_no = flt.flight_no AND       
+       flt.departure_airport = dep.airport_code AND
+       flt.arrival_airport = arr.airport_code AND
+       shp.customer_id = cus.customer_id AND
+       shipment_date = to_date('15-Apr-2015');
+
+
+/* D. Full flight departure schedule */
+
+SELECT afl.flight_no,
+       dep.airport_code departure_airport_code,
+       dep.city departure_airport,
+       arr.airport_code arrival_airport_code,
+       arr.city arrival_airport,
+       to_char(afl.departure_date + (dep.timezone_offset/24), 'HH24:MI') departure_time,
+       lpad(UNISTR('\2192'), trunc(afl.arrival_date + (arr.timezone_offset/24))- 
+       trunc(afl.departure_date + (dep.timezone_offset/24)), UNISTR('\2192')) ||
+       to_char(afl.arrival_date + (arr.timezone_offset/24), 'HH24:MI') arrival_time,
+       afl.vex_availability 
+  FROM actual_flight afl,
+       flight        flt,
+       airport       arr,
+       airport       dep
+ WHERE afl.flight_no = flt.flight_no AND
+       flt.departure_airport = dep.airport_code AND
+       flt.arrival_airport = arr.airport_code AND
+       trunc(departure_date) = to_date('15-APR-2015', 'DD-MON-YYYY')
+ORDER BY departure_time, departure_airport_code;
+
+
+/* E. Full flight arrival schedule */
+      
+SELECT afl.flight_no,
+       dep.airport_code departure_airport_code,
+       dep.city departure_airport,
+       arr.airport_code arrival_airport_code,
+       arr.city arrival_airport,
+       to_char(afl.departure_date + (dep.timezone_offset/24), 'HH24:MI') departure_time,
+       lpad(UNISTR('\2192'), trunc(afl.arrival_date + (arr.timezone_offset/24))- 
+       trunc(afl.departure_date + (dep.timezone_offset/24)), UNISTR('\2192')) ||
+       to_char(afl.arrival_date + (arr.timezone_offset/24), 'HH24:MI') arrival_time,
+       afl.vex_availability 
+  FROM actual_flight afl,
+       flight        flt,
+       airport       arr,
+       airport       dep
+ WHERE afl.flight_no = flt.flight_no AND
+       flt.departure_airport = dep.airport_code AND
+       flt.arrival_airport = arr.airport_code AND
+       trunc(arrival_date) = to_date('15-APR-2015', 'DD-MON-YYYY')
+ORDER BY arrival_time, arrival_airport_code;
+       
+
+/* F. Revenue report by flight */
+
+SELECT flt.flight_no,
+       flt.departure_airport ||'-'||flt.arrival_airport airports,
+       to_char(act.departure_date + (dep.timezone_offset/24), 'HH24:MI') departure_time,
+       to_char(act.arrival_date + (arr.timezone_offset/24), 'HH24:MI') arrival_time,
+       COUNT(shp.shipment_code) total_shipments,
+       SUM(nvl(shipment_price, 0)) total_revenue
+  FROM shipment      shp,
+       actual_flight act,
+       flight        flt,
+       airport       dep,
+       airport       arr,
+       customer      cus
+ WHERE act.flight_id = shp.flight_id(+) AND
+       shp.customer_id = cus.customer_id (+) AND
+       act.flight_no = flt.flight_no AND       
+       flt.departure_airport = dep.airport_code AND
+       flt.arrival_airport = arr.airport_code AND
+       act.departure_date + (dep.timezone_offset/24)
+       BETWEEN to_date('01-DEC-2014') AND to_date('31-DEC-2014')
+ GROUP BY flt.flight_no,
+       flt.departure_airport ||'-'||flt.arrival_airport,
+       act.departure_date + (dep.timezone_offset/24),
+       act.arrival_date + (arr.timezone_offset/24)
+ORDER BY total_revenue DESC;
+
+
+/* G. Revenue report by day of the week */
+
+SELECT ship_type, ship_day, total_shipments, price
+FROM(
+SELECT 'VEX' ship_type, 
+       to_char(shp.shipment_date, 'fmDAY') ship_day,
+       to_char(shp.shipment_date, 'D') d_order,
+       COUNT(*) total_shipments,
+       SUM(shp.shipment_price) price
+  FROM shipment shp
+ WHERE shipment_type = 'VEX' AND shipment_date BETWEEN to_date('01-DEC-2014') AND to_date('15-APR-2015')
+ GROUP BY to_char(shp.shipment_date, 'fmDAY'), to_char(shp.shipment_date, 'D')
+UNION ALL
+SELECT 'REGULAR' ship_type, 
+       to_char(shp.shipment_date, 'fmDAY') ship_day,
+       to_char(shp.shipment_date, 'D') d_order,
+       COUNT(*) total_shipments,
+       SUM(shp.shipment_price) price
+  FROM shipment shp
+ WHERE shipment_type != 'VEX' AND shipment_date BETWEEN to_date('01-DEC-2014') AND to_date('15-APR-2015')
+ GROUP BY to_char(shp.shipment_date, 'fmDAY'), to_char(shp.shipment_date, 'D')
+)
+ORDER BY d_order, ship_type;
+
+
+/* H. Flag customers for discount */
+
+SELECT DISTINCT cus.customer_id, cus.company, cus.vex_discount
+  FROM shipment shp, customer cus
+ WHERE shp.customer_id = cus.customer_id AND
+       shp.customer_id NOT IN (SELECT customer_id
+                                 FROM shipment
+                                WHERE shipment_type = 'VEX')
+  ORDER BY cus.customer_id;
